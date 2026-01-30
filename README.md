@@ -223,10 +223,6 @@ Documentação completa em **http://localhost:3000/api-docs**.
 - `GET /sessions/:id/availability` retorna lista de assentos sem status “vendido/reservado” por assento.
 - Sem idempotency key no `POST /payments/confirm`.
 
-### Melhorias futuras
-
-- Autenticação (JWT/sessão); reserva de múltiplos assentos em uma chamada; disponibilidade por assento (livre/reservado/vendido); idempotency key no pagamento; endpoint `/health` e métricas; mais testes (e2e, SalesService, etc.).
-
 ---
 
 ## Scripts do projeto
