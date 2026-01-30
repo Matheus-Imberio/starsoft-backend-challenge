@@ -1,4 +1,5 @@
-FROM node:20-alpine AS development
+# Usando node:20 (Debian) em vez de alpine - às vezes o registry responde melhor
+FROM node:20 AS development
 
 WORKDIR /usr/src/app
 
@@ -10,7 +11,7 @@ COPY . .
 
 RUN npm run build
 
-FROM node:20-alpine AS production
+FROM node:20 AS production
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
