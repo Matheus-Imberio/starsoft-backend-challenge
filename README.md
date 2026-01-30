@@ -1,205 +1,243 @@
-# Teste para Desenvolvedor(a) Back-End Node.js/NestJS - Sistemas Distribuídos
+# Cinema API — Venda de Ingressos
 
-## Introdução
-
-Bem-vindo(a) ao processo seletivo para a posição de **Desenvolvedor(a) Back-End** em nossa equipe! Este teste tem como objetivo avaliar suas habilidades técnicas em sistemas distribuídos, alta concorrência, e arquiteturas escaláveis utilizando Node.js e NestJS.
-
-## Instruções
-
-- Faça um **fork** deste repositório para o seu GitHub pessoal.
-- Desenvolva as soluções solicitadas abaixo, seguindo as **melhores práticas de desenvolvimento**.
-- Após a conclusão, envie o link do seu repositório para avaliação.
-- Sinta-se à vontade para adicionar qualquer documentação ou comentários que julgar necessário.
-
-## Desafio
-
-### Contexto
-
-Você foi designado para desenvolver o sistema de venda de ingressos para uma **rede de cinemas**. O sistema precisa lidar com **concorrência**: múltiplos usuários tentando comprar os mesmos assentos simultaneamente.
-
-### O Problema Real
-
-Imagine a seguinte situação:
-
-- Uma sala de cinema com **2 assentos disponíveis**
-- **10 usuários** tentando comprar no mesmo momento
-- **Múltiplas instâncias** da aplicação rodando simultaneamente
-- Necessidade de garantir que **nenhum assento seja vendido duas vezes**
-- **Reservas temporárias** enquanto o pagamento é processado (30 segundos)
-- **Cancelamento automático** se o pagamento não for confirmado
-
-### Requisitos Obrigatórios
-
-#### 1. **Configuração do Ambiente**
-
-Configure um ambiente de desenvolvimento utilizando **Docker** e **Docker Compose**, incluindo:
-
-- Aplicação Node.js com **NestJS**
-- **Banco de dados relacional** (PostgreSQL, MySQL, etc.)
-- **Sistema de mensageria** (Kafka, RabbitMQ, etc.)
-- **Banco de dados distribuído** para cache (Redis, Memcached, etc.)
-- A aplicação deve ser iniciada com um único comando (`docker-compose up`)
-
-#### 2. **API RESTful - Gestão de Ingressos**
-
-Implemente uma API RESTful com as seguintes operações:
-
-**2.1. Gestão de Sessões**
-
-- Criar sessões de cinema (filme, horário, sala)
-- Definir assentos disponíveis por sessão (Mínimo 16 assentos)
-- Definir preço do ingresso
-
-**2.2. Reserva de Assentos**
-
-- Endpoint para reservar assento(s)
-- Reserva tem validade de 30 segundos
-- Retornar ID da reserva e timestamp de expiração
-
-**2.3. Confirmação de Pagamento**
-
-- Endpoint para confirmar pagamento de uma reserva, e assim converter reserva em venda definitiva
-- Publicar evento de venda confirmada
-
-**2.4. Consultas**
-
-- Buscar disponibilidade de assentos por sessão (tempo real)
-- Histórico de compras por usuário
-
-#### 3. **Processamento Assíncrono com Mensageria**
-
-- Usar **sistema de mensageria** para comunicação assíncrona entre componentes
-- Publicar eventos quando: reserva criada, pagamento confirmado, reserva expirada, assento liberado
-- Consumir e processar esses eventos de forma confiável
-
-#### 4. **Logging**
-
-- Implementar logging estruturado (níveis: DEBUG, INFO, WARN, ERROR)
-
-#### 5. **Clean Code e Boas Práticas**
-
-- Aplicar princípios SOLID
-- Separação clara de responsabilidades (Controllers, Services, Repositories/Use Cases)
-- Tratamento adequado de erros
-- Configurar ESLint e Prettier
-- Commits organizados e descritivos
-
-### Requisitos Técnicos Específicos
-
-#### Estrutura de Banco de Dados Sugerida
-
-Você deve projetar um schema que suporte:
-
-- **Sessões**: informações da sessão (filme, horário, sala)
-- **Assentos**: assentos disponíveis por sessão
-- **Reservas**: reservas temporárias com expiração
-- **Vendas**: vendas confirmadas
-
-#### Fluxo de Reserva Esperado
-
-```
-1. Cliente solicita uma reserva
-2. Sistema verifica disponibilidade com proteção contra concorrência
-3. Cria reserva temporária (válida por 30 segundos)
-4. Publica evento no sistema de mensageria
-5. Retorna ID da reserva
-
-6. Cliente confirma o pagamento
-7. Sistema valida reserva (ainda não expirou?)
-8. Converte reserva em venda definitiva
-9. Publica evento de confirmação no sistema de mensageria
-```
-
-#### Edge Cases a Considerar
-
-1. **Race Condition**: 2 usuários clicam no último assento disponível no mesmo milissegundo
-2. **Deadlock**: Usuário A reserva assentos 1 e 3, Usuário B reserva assentos 3 e 1, ambos tentam reservar o assento do outro
-3. **Idempotência**: Cliente reenvia mesma requisição por timeout
-4. **Expiração**: Reservas não confirmadas devem liberar o assento automaticamente após 30 segundos
-
-### Diferenciais (Opcional - Pontos Extra)
-
-Os itens abaixo são opcionais e darão pontos extras na avaliação:
-
-- **Documentação da API**: Swagger/OpenAPI acessível em `/api-docs`
-- **Testes de Unidade**: Cobertura de 60-70%, mockar dependências externas
-- **Dead Letter Queue (DLQ)**: Mensagens que falharam vão para fila separada
-- **Retry Inteligente**: Sistema de retry com backoff exponencial
-- **Processamento em Batch**: Processar mensagens em lotes
-- **Testes de Integração/Concorrência**: Simular múltiplos usuários simultaneamente
-- **Rate Limiting**: Limitar requisições por IP/usuário
-
-### Critérios de Avaliação
-
-Os seguintes aspectos serão considerados (em ordem de importância):
-
-1. **Funcionalidade Correta**: O sistema garante que nenhum assento é vendido duas vezes?
-2. **Controle de Concorrência**: Coordenação distribuída implementada corretamente?
-3. **Qualidade de Código**: Clean code, SOLID, padrões de projeto?
-4. **Documentação**: README claro e código bem estruturado?
-
-### Entrega
-
-#### Repositório Git
-
-- Código disponível em repositório público (GitHub/GitLab)
-- Histórico de commits bem organizado e descritivo
-- Branch `main` deve ser a versão final
-
-#### README.md Obrigatório
-
-Deve conter:
-
-1. **Visão Geral**: Breve descrição da solução
-2. **Tecnologias Escolhidas**: Qual banco de dados, sistema de mensageria e cache você escolheu e por quê?
-3. **Como Executar**:
-   - Pré-requisitos
-   - Comandos para subir o ambiente
-   - Como popular dados iniciais
-   - Como executar testes (se houver)
-4. **Estratégias Implementadas**:
-   - Como você resolveu race conditions?
-   - Como garantiu coordenação entre múltiplas instâncias?
-   - Como preveniu deadlocks?
-5. **Endpoints da API**: Lista com exemplos de uso
-6. **Decisões Técnicas**: Justifique escolhas importantes de design
-7. **Limitações Conhecidas**: O que ficou faltando? Por quê?
-8. **Melhorias Futuras**: O que você faria com mais tempo?
-
-### Exemplo de Fluxo para Testar
-
-Para facilitar a avaliação, inclua instruções ou script mostrando:
-
-```
-1. Criar sessão "Filme X - 19:00"
-2. Criar sala com no mínimo 16 assentos, a R$ 25,00 cada
-3. Simular
- 3.1. 2 usuários tentando reservar o mesmo assento simultaneamente
-4. Verificar quantidade de reservas geradas
-5. Comprovar o funcionamento do fluxo de pagamento do assento
-```
-
-### Prazo
-
-- **Prazo sugerido**: 5 dias corridos a partir do recebimento do desafio
-
-### Dúvidas e Suporte
-
-- Abra uma **Issue** neste repositório caso tenha dúvidas sobre requisitos
-- Não fornecemos suporte para problemas de configuração de ambiente
-- Assuma premissas razoáveis quando informações estiverem ambíguas e documente-as
+API REST para venda de ingressos de cinema com **controle de concorrência** (Redis + PostgreSQL), reservas de 30s, mensageria (RabbitMQ), logging estruturado e documentação Swagger.
 
 ---
 
-## Observações Finais
+## Índice
 
-Este é um desafio que reflete problemas reais enfrentados em produção. **Não esperamos que você implemente 100% dos requisitos**, especialmente os diferenciais. Priorize:
+- [Começando (3 passos)](#começando-3-passos)
+- [O que é este projeto](#o-que-é-este-projeto)
+- [Como executar](#como-executar)
+- [Popular dados e testar](#popular-dados-e-testar)
+- [Endpoints da API](#endpoints-da-api)
+- [Tecnologias](#tecnologias-escolhidas)
+- [Concorrência e fluxo](#estratégias-de-concorrência)
+- [Edge cases, limitações e melhorias](#edge-cases-limitações-e-melhorias)
+- [Scripts do projeto](#scripts-do-projeto)
 
-1. ✅ Garantir que nenhum assento seja vendido duas vezes
-2. ✅ Sistema de mensageria confiável
-3. ✅ Código limpo e bem estruturado
-4. ✅ Documentação clara
+---
 
-**Qualidade > Quantidade**. É melhor implementar poucas funcionalidades muito bem feitas do que muitas de forma superficial.
+## Começando (3 passos)
 
-**Boa sorte! Estamos ansiosos para conhecer sua solução e discutir suas decisões técnicas na entrevista.**
+**1.** Crie o arquivo `.env` na raiz do projeto (copie o conteúdo da seção [Como executar](#como-executar)).
+
+**2.** No terminal, na pasta do projeto:
+
+```bash
+npm install
+docker compose up --build -d
+```
+
+**3.** Quando aparecer `Application listening on port 3000`:
+
+- **API:** http://localhost:3000  
+- **Documentação interativa (Swagger):** http://localhost:3000/api-docs  
+
+Tudo sobe com um único comando; você já pode criar sessões, assentos, reservar e pagar pela API ou pelo Swagger.
+
+---
+
+## O que é este projeto
+
+Sistema de **reserva e venda de ingressos** que garante:
+
+| Garantia | Como |
+|----------|------|
+| **Um assento = uma reserva ou venda** | Lock no Redis + transação no PostgreSQL |
+| **Reservas expiram em 30 segundos** | Redis TTL + eventos RabbitMQ |
+| **Eventos de domínio** | RabbitMQ: `reservation.created`, `reservation.expired`, `payment.confirmed`, `seat.released` (com retry e DLQ) |
+| **Várias instâncias da API** | Redis e PostgreSQL compartilhados; correlation ID nos logs e mensagens |
+
+**Funcionalidades:** criar sessões e assentos, reservar assento(s), confirmar pagamento, consultar disponibilidade e histórico de compras.
+
+---
+
+## Como executar
+
+Tudo roda com **Docker Compose**: um único comando sobe **API + PostgreSQL + Redis + RabbitMQ**.
+
+### Pré-requisitos
+
+- **Docker** e **Docker Compose**
+
+### Passos
+
+1. Na raiz do projeto, crie o arquivo **`.env`**:
+
+```env
+DB_HOST=postgres
+DB_PORT=5432
+DB_USERNAME=admin
+DB_PASSWORD=admin_password
+DB_DATABASE=cinema_db
+
+REDIS_HOST=redis
+REDIS_PORT=6379
+
+RABBITMQ_USER=guest
+RABBITMQ_PASS=guest
+RABBITMQ_HOST=rabbitmq
+RABBITMQ_PORT=5672
+
+PORT=3000
+NODE_ENV=development
+```
+
+2. Execute:
+
+```bash
+npm install
+docker compose up --build -d
+```
+
+3. Aguarde a mensagem **"Application listening on port 3000"**. A API estará em http://localhost:3000.
+
+### URLs úteis
+
+| Recurso | URL |
+|---------|-----|
+| API | http://localhost:3000 |
+| Swagger (documentação) | http://localhost:3000/api-docs |
+| RabbitMQ Management | http://localhost:15672 (usuário: `guest`, senha: `guest`) |
+
+---
+
+## Popular dados e testar
+
+O banco sobe com o schema pronto (`infra/postgres/init.sql`). Não há seed; usuários, sessões e assentos são criados pela API.
+
+### Scripts de teste
+
+Execute **na pasta raiz do projeto**, com a API rodando em http://localhost:3000:
+
+| Script | O que faz |
+|--------|-----------|
+| test-api | Fluxo completo: criar usuário, sessão, 16 assentos, reservar, pagar, histórico e tentativa de reservar assento já vendido. |
+| test-concurrency-scenario | **Cenário guiado:** 2 usuários (Ana e Bruno) tentam o mesmo assento → só 1 reserva; confirma pagamento; prova que não há duplicidade. |
+
+Ao final do cenário de concorrência deve aparecer: **CENARIO CONCLUIDO - SEM DUPLICIDADE**.
+
+**Linux / macOS (bash):**  
+Requer apenas `curl` e `jq` (ex.: `apt install curl jq` ou `brew install curl jq`). Na pasta raiz do projeto:
+```bash
+chmod +x scripts/test-api.sh scripts/test-concurrency-scenario.sh
+./scripts/test-api.sh
+./scripts/test-concurrency-scenario.sh
+```
+
+**Windows (PowerShell):**
+```powershell
+.\scripts\test-api.ps1
+.\scripts\test-concurrency-scenario.ps1
+```
+
+**Como garantir que os scripts bash funcionam**
+
+- **CI (GitHub Actions):** O workflow `.github/workflows/test-scripts.yml` roda em cada push/PR nas branches `main`, `master` ou `staging`. Ele sobe a stack com `docker compose up`, aguarda a API ficar pronta e executa `./scripts/test-api.sh` e `./scripts/test-concurrency-scenario.sh` no Linux. Se algum script falhar, o job falha.
+- **Local (Linux ou WSL):** Com a API rodando (ex.: `docker compose up --build`), na pasta raiz: `chmod +x scripts/*.sh` e depois `./scripts/test-api.sh` e `./scripts/test-concurrency-scenario.sh`. Requer `curl` e `jq` instalados.
+
+### Passo a passo manual (via API ou Swagger)
+
+1. **POST /users** — Criar usuário (`name`, `email`). Guardar o `id`.
+2. **POST /sessions** — Criar sessão (ex.: "Filme X - 19:00", sala, horário, `priceCents`). Guardar o `id`.
+3. **POST /sessions/:id/seats** — Body: `{ "seatNumbers": ["A1", "A2", ..., "A16"] }`. Guardar pelo menos um `id` de assento.
+4. **POST /reservations** — Body: `{ "userId", "sessionId", "seatId" }`. Retorna reserva com `expires_at` (30s).
+5. **POST /payments/confirm** — Body: `{ "reservationId" }`. Converte reserva em venda.
+6. **GET /payments/user/:userId/history** — Histórico de compras do usuário.
+
+Documentação completa em **http://localhost:3000/api-docs**.
+
+---
+
+## Endpoints da API
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | / | Health |
+| POST | /users | Criar usuário |
+| POST | /sessions | Criar sessão |
+| POST | /sessions/:id/seats | Adicionar assentos (mín. 16) |
+| GET | /sessions/:id/availability | Listar assentos da sessão |
+| POST | /reservations | Reservar assento (30s) |
+| GET | /reservations/user/:userId | Reservas do usuário |
+| POST | /payments/confirm | Confirmar pagamento |
+| GET | /payments/user/:userId/history | Histórico de compras |
+
+**Swagger:** http://localhost:3000/api-docs
+
+---
+
+## Tecnologias escolhidas
+
+| Tecnologia | Uso | Justificativa |
+|------------|-----|---------------|
+| **PostgreSQL** | Persistência (users, sessions, seats, reservations, sales) | Transações ACID; `UNIQUE(session_id, seat_id)` em `sales` evita venda duplicada. |
+| **Redis** | Lock por (session_id, seat_id) com TTL 30s; TTL de expiração de reserva; keyspace notifications | Lock atômico (`SET NX PX`) entre instâncias; fallback com polling a cada 10s. |
+| **RabbitMQ** | Eventos: reservation.created/expired, payment.confirmed, seat.released; DLQ e retry | Desacoplamento; ACK manual; retry com backoff; correlation ID. |
+| **NestJS** | API, módulos, DTOs, validação, Swagger, Throttler, filtros | Estrutura clara; integração com TypeORM, Pino, etc. |
+| **TypeORM** | Entidades e transações | Schema alinhado ao `init.sql`; transações na reserva e no pagamento. |
+| **Pino** | Logging (DEBUG, INFO, WARN, ERROR); correlation ID por request e por mensagem | Performance; formato adequado para agregadores. |
+| **class-validator** | Validação de DTOs | ValidationPipe global (whitelist, forbidNonWhitelisted). |
+
+---
+
+## Estratégias de concorrência
+
+- **Lock no Redis:** chave `lock:session:{sessionId}:seat:{seatId}`, comando `SET NX PX 30000`. Quem não obtém o lock recebe 409. Lock liberado no `finally` (DEL).
+- **Transação no PostgreSQL:** verificação de venda/reserva ativa + inserção da reserva numa única transação; evita duas reservas para o mesmo assento.
+- **Constraint:** `UNIQUE(session_id, seat_id)` em `sales` — segunda venda para o mesmo assento falha (409).
+- **Ordenação de assentos:** para múltiplos assentos, IDs ordenados antes dos locks (evita deadlock entre dois usuários reservando [A1,A2] e [A2,A1]).
+- **Múltiplas instâncias:** Redis e PostgreSQL compartilhados; correlation ID nos logs e nas mensagens RabbitMQ.
+
+### Fluxo resumido da reserva
+
+1. Request `POST /reservations` → tenta lock Redis (sessionId, seatId).
+2. Se lock OK: dentro de transação verifica venda e reserva ativa; insere reserva (expires_at = now + 30s); publica `reservation.created`; agenda expiração no Redis (`SETEX` 30s); commit.
+3. Após 30s: Redis expira a chave → subscriber publica `reservation.expired` (ou polling a cada 10s) → consumer marca reserva como EXPIRED e publica `seat.released`.
+4. Pagamento: `POST /payments/confirm` valida reserva PENDING e não expirada; insere em `sales`; atualiza reserva para COMPLETED; publica `payment.confirmed`.
+
+---
+
+## Edge cases, limitações e melhorias
+
+### Edge cases tratados
+
+| Cenário | Tratamento |
+|--------|------------|
+| Dois usuários no mesmo assento | Lock Redis: um obtém, outro recebe 409; transação garante uma reserva. |
+| Reserva expirada no pagamento | Validação de `expires_at` e status; 400 e marca EXPIRED. |
+| Pagamento duplicado (mesma reserva) | Status deixa de ser PENDING; segunda chamada retorna 400. |
+| Assento já vendido | Constraint UNIQUE; 409. |
+| Processo morre com lock | TTL 30s no Redis; lock expira. |
+| Falha no consumer RabbitMQ | Retry com backoff; DLQ após N tentativas. |
+| Redis sem keyspace notifications | Polling a cada 10s publica `reservation.expired`. |
+| Payload inválido | ValidationPipe → 400. |
+| Muitas requisições | ThrottlerGuard (ex.: 10 req/s, 100 req/min). |
+
+### Limitações conhecidas
+
+- Um assento por request no `POST /reservations`; múltiplos assentos = várias chamadas (ordenação para deadlock já existe no `LockService.orderSeats`).
+- Sem autenticação; o cliente envia `userId` (UUID).
+- `GET /sessions/:id/availability` retorna lista de assentos sem status “vendido/reservado” por assento.
+- Sem idempotency key no `POST /payments/confirm`.
+
+### Melhorias futuras
+
+- Autenticação (JWT/sessão); reserva de múltiplos assentos em uma chamada; disponibilidade por assento (livre/reservado/vendido); idempotency key no pagamento; endpoint `/health` e métricas; mais testes (e2e, SalesService, etc.).
+
+---
+
+## Scripts do projeto
+
+| Comando | Descrição |
+|---------|-----------|
+| `docker compose up --build` | Sobe toda a aplicação (API + Postgres + Redis + RabbitMQ) |
+| `npm run test` | Testes unitários (Jest) |
+| `npm run build` | Build de produção (ex.: para imagem Docker) |
+| `./scripts/test-api.sh` | Teste completo da API (Linux/macOS; requer curl e jq) |
+| `./scripts/test-concurrency-scenario.sh` | Cenário guiado (Linux/macOS) |
+| `.\scripts\test-api.ps1` | Teste completo da API (Windows PowerShell) |
+| `.\scripts\test-concurrency-scenario.ps1` | Cenário guiado (Windows PowerShell) |
+
+---
