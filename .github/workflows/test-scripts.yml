@@ -1,0 +1,66 @@
+# Garante que os scripts bash (test-api.sh e test-concurrency-scenario.sh)
+# funcionam no Linux contra a API real (docker compose).
+name: Test bash scripts (Linux)
+
+on:
+  push:
+    branches: [main, master, staging]
+  pull_request:
+    branches: [main, master, staging]
+
+jobs:
+  test-scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create .env
+        run: |
+          cat << 'ENVFILE' > .env
+          DB_HOST=postgres
+          DB_PORT=5432
+          DB_USERNAME=admin
+          DB_PASSWORD=admin_password
+          DB_DATABASE=cinema_db
+          REDIS_HOST=redis
+          REDIS_PORT=6379
+          RABBITMQ_USER=guest
+          RABBITMQ_PASS=guest
+          RABBITMQ_HOST=rabbitmq
+          RABBITMQ_PORT=5672
+          PORT=3000
+          NODE_ENV=development
+          ENVFILE
+
+      - name: Start stack (docker compose)
+        run: |
+          docker compose up --build -d
+          echo "Waiting for API on http://localhost:3000..."
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000 || true)
+            if [ "$code" = "200" ]; then
+              echo "API ready."
+              break
+            fi
+            if [ "$i" -eq 60 ]; then
+              echo "API did not become ready in time (last code: $code)."
+              docker compose logs api
+              exit 1
+            fi
+            sleep 2
+          done
+
+      - name: Run test-api.sh
+        run: |
+          chmod +x scripts/test-api.sh
+          ./scripts/test-api.sh
+
+      - name: Run test-concurrency-scenario.sh
+        run: |
+          chmod +x scripts/test-concurrency-scenario.sh
+          ./scripts/test-concurrency-scenario.sh
+
+      - name: Stop stack
+        if: always()
+        run: docker compose down -v
