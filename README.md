@@ -206,6 +206,7 @@ Documentação completa em **http://localhost:3000/api-docs**.
 | Cenário | Tratamento |
 |--------|------------|
 | Dois usuários no mesmo assento | Lock Redis: um obtém, outro recebe 409; transação garante uma reserva. |
+| Email duplicado (POST /users) | Constraint UNIQUE; 409 com mensagem "A user with this email already exists". |
 | Reserva expirada no pagamento | Validação de `expires_at` e status; 400 e marca EXPIRED. |
 | Pagamento duplicado (mesma reserva) | Status deixa de ser PENDING; segunda chamada retorna 400. |
 | Assento já vendido | Constraint UNIQUE; 409. |
