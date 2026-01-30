@@ -13,6 +13,7 @@ lerna-debug.log*
 
 # OS
 .DS_Store
+Thumbs.db
 
 # Tests
 /coverage
@@ -34,7 +35,8 @@ lerna-debug.log*
 !.vscode/extensions.json
 !.vscode/stylelint.json
 
-# Environment variables
+# Environment variables (nao commitar secrets)
+# .env.local.example SOBE no repo - e o template para quem for testar (copiar para .env.local)
 .env
 .env.test
 .env.production
