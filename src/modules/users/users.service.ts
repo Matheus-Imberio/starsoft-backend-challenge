@@ -15,8 +15,9 @@ export class UsersService {
     const user = this.userRepository.create(dto);
     try {
       return await this.userRepository.save(user);
-    } catch (error: { code?: string }) {
-      if (error?.code === '23505') {
+    } catch (error: unknown) {
+      const err = error as { code?: string };
+      if (err?.code === '23505') {
         throw new ConflictException('A user with this email already exists');
       }
       throw error;
